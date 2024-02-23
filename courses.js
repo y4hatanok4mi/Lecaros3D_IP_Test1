@@ -1,7 +1,6 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const Course = require("./schema/courseSchema");
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -11,7 +10,7 @@ app.get("/", (req, res) => {
 
 
 // Retrieve all courses and sort them alphabetically by names
-app.get("/courses/getSortedCourses", async (req, res) => {
+app.get("/courses/Sorted", async (req, res) => {
   try {
     // Retrieve all documents from the Course collection
     const years = await Course.find();
@@ -45,7 +44,7 @@ app.get("/courses/getSortedCourses", async (req, res) => {
 
 
 // Select and extract the name and specialization of each course
-app.get("/courses/getNameNSpecialization", async (req, res) => {
+app.get("/courses/NameAndSpecialization", async (req, res) => {
   try {
     // Retrieve all documents from the Course collection
     const years = await Course.find();
@@ -81,7 +80,7 @@ app.get("/courses/getNameNSpecialization", async (req, res) => {
 
 
 // Retrieve all BSIS and BSIT courses from the curriculum
-app.get("/courses/getCourses", async (req, res) => {
+app.get("/courses/BSIS", async (req, res) => {
   try {
     // Retrieve all documents from the Course collection
     const years = await Course.find();
@@ -103,7 +102,7 @@ app.get("/courses/getCourses", async (req, res) => {
     // Filter courses by tags (BSIT or BSIS) and map them to include only necessary information
     const info = courses
       .filter(
-        (course) => course.tags.includes("BSIT") || course.tags.includes("BSIS")
+        (course) => course.tags.includes("BSIS")
       )
       .map((course) => ({
         code: course.code,
@@ -120,6 +119,44 @@ app.get("/courses/getCourses", async (req, res) => {
   }
 });
 
+app.get("/courses/BSIT", async (req, res) => {
+  try {
+    // Retrieve all documents from the Course collection
+    const years = await Course.find();
+
+    let courses = [];
+
+    // Iterate through each year
+    years.forEach((year) => {
+      // Iterate through each academic year (1st Year, 2nd Year, 3rd Year, 4th Year)
+      ["1st Year", "2nd Year", "3rd Year", "4th Year"].forEach((yearKey) => {
+        // Check if the current year has courses
+        if (year[yearKey]) {
+          // Add courses of the current year to the 'courses' array
+          courses.push(...year[yearKey]);
+        }
+      });
+    });
+
+    // Filter courses by tags BSIT and map them to include only necessary information
+    const info = courses
+      .filter(
+        (course) => course.tags.includes("BSIT")
+      )
+      .map((course) => ({
+        code: course.code,
+        description: course.description,
+        units: course.units,
+        tags: course.tags,
+      }));
+
+    // Send the filtered course information
+    res.json(info);
+  } catch (err) {
+    // If an error occurs, send a 500 status response with an error message
+    res.status(500).json({ message: err.message });
+  }
+});
 
 //Connect to MongoDB
 mongoose.connect("mongodb://localhost:27017/courseInfo")
@@ -127,9 +164,9 @@ mongoose.connect("mongodb://localhost:27017/courseInfo")
     console.log("Connected to Mongo Database!");
     // Start the server
     app.listen(PORT, () => {
-      console.log(`Listening on http://localhost:${PORT}...`);
+      console.log(`Listening on http://localhost: ${PORT}...`);
     });
   })
   .catch((error) => {
-    console.log(error);
+    console.log("Error connecting to database!", error);
   });
